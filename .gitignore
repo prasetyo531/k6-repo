@@ -1,0 +1,28 @@
+# Node dependencies (if using k6 extensions or npm-based helpers)
+node_modules/
+
+# VSCode settings
+.vscode/
+
+# Environment variables
+.env
+k6.env
+
+# K6 output files
+*.json
+*.csv
+*.html
+*.log
+
+# Optional custom reports
+summary/
+report/
+output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary test data
+tmp/
+*.tmp
