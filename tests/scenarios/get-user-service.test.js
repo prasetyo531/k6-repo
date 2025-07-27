@@ -19,7 +19,7 @@ export default function () {
 
   const loginRes = userService.login(username, password);
   const token = loginRes.json('data')?.token;
-  console.log(`🔑 Token received: ${token}`);
+  console.log(`Login token received: ${token}`);
   check(loginRes, {
     'Login success': (res) => res.status === 200,
     'Token received': () => !!token,

@@ -46,7 +46,7 @@ export default function () {
   });
 
   const token = loginRes.json('data').token;
-  console.log(`🔑 Token received: ${token}`);
+  console.log(`Login token received: ${token}`);
 
   // 3. Get user details
   const userRes = http.get('http://localhost:3000/api/users/current', {
