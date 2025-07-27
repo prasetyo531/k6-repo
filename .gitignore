@@ -9,7 +9,7 @@ node_modules/
 k6.env
 
 # K6 output files
-*.json
+report.json
 *.csv
 *.html
 *.log
