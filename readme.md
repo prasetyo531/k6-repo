@@ -6,6 +6,11 @@
 - `tests/endpoint/`: Service layer for HTTP requests
 - `tests/utils/`: Utility functions (e.g., data generators)
 
+## Development Setup
+
+```bash
+node src/main.js
+
 ## Usage
 
 Run the test with:
