@@ -35,6 +35,9 @@ jobs:
             echo "Pulling latest code..."
             git pull origin main
 
+            echo "Ensuring K6 is installed..."
+            bash scripts/install-k6.sh
+
             echo "Installing dependencies..."
             yarn install
 
