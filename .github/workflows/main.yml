@@ -3,27 +3,46 @@ name: Deploy and Run K6 on GCP VM
 on:
   push:
     branches:
-      - main  # Or your target branch
+      - main # Trigger workflow on push to main branch
 
 jobs:
   deploy:
+    name: Deploy to GCP and Run K6 Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup SSH
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.GCP_SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy and run test
+      - name: Connect to GCP VM and deploy
         run: |
           ssh ${{ secrets.GCP_SSH_USERNAME }}@${{ secrets.GCP_SSH_HOST }} << 'EOF'
-            set -e
-            cd ~/k6-project || git clone https://github.com/${{ github.repository }}.git k6-project && cd k6-project
+            set -e  # Exit if any command fails
+
+            echo "🔍 Checking project directory..."
+            # Clone repo if it doesn't exist, otherwise enter it
+            if [ ! -d "$HOME/k6-project" ]; then
+              echo "Cloning repo..."
+              git clone https://github.com/${{ github.repository }}.git ~/k6-project
+            fi
+
+            cd ~/k6-project
+
+            echo "Pulling latest code..."
             git pull origin main
+
+            echo "Installing dependencies..."
             yarn install
+
+            echo "Starting InfluxDB + Grafana..."
             docker-compose up -d
+
+            echo "Running K6 load test..."
             yarn k6 run --out influxdb=http://localhost:8086/k6 tests/scenario/user-flow.test.js
+
+            echo "Done."
           EOF
