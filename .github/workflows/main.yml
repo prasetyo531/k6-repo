@@ -42,7 +42,7 @@ jobs:
             docker-compose up -d
 
             echo "Running K6 load test..."
-            yarn k6 run --out influxdb=http://localhost:8086/k6 tests/scenario/user-flow.test.js
+            k6 run --out influxdb=http://localhost:8086/k6 tests/scenario/user-flow.test.js
 
             echo "Done."
           EOF
