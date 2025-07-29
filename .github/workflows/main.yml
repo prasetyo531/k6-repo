@@ -3,7 +3,7 @@ name: Deploy and Run K6 on GCP VM
 on:
   push:
     branches:
-      - main # Trigger workflow on push to main branch
+      - main
 
 jobs:
   deploy:
@@ -11,42 +11,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          echo "" >> ~/.ssh/known_hosts  # Ensure file exists
           ssh-keyscan -H ${{ secrets.GCP_SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Connect to GCP VM and deploy
+        env:
+          REPO: ${{ github.repository }}
         run: |
-          ssh ${{ secrets.GCP_SSH_USERNAME }}@${{ secrets.GCP_SSH_HOST }} << 'EOF'
-            set -e  # Exit if any command fails
+          ssh -o StrictHostKeyChecking=no ${{ secrets.GCP_SSH_USERNAME }}@${{ secrets.GCP_SSH_HOST }} << EOF
+            set -e  # Exit on error
 
             echo "🔍 Checking project directory..."
-            # Clone repo if it doesn't exist, otherwise enter it
-            if [ ! -d "$HOME/k6-project" ]; then
-              echo "Cloning repo..."
-              git clone https://github.com/${{ github.repository }}.git ~/k6-project
+            if [ ! -d "\$HOME/k6-project" ]; then
+              echo "📦 Cloning repository..."
+              git clone https://github.com/${REPO}.git \$HOME/k6-project
             fi
 
-            cd ~/k6-project
+            cd \$HOME/k6-project
 
-            echo "Pulling latest code..."
+            echo "🔄 Pulling latest changes..."
             git pull origin main
 
-            echo "Ensuring K6 is installed..."
+            echo "🔧 Installing K6 (if needed)..."
             bash scripts/install-k6.sh
 
-            echo "Installing dependencies..."
-            yarn install
+            echo "📦 Installing dependencies..."
+            yarn install --frozen-lockfile
 
-            echo "Starting InfluxDB + Grafana..."
+            echo "📊 Starting InfluxDB + Grafana..."
             docker-compose up -d
 
-            echo "Running K6 load test..."
-            cd ~/k6-project
+            echo "🚀 Running K6 load test..."
             k6 run tests/scenarios/get-user-service.test.js --out influxdb=http://localhost:8086/k6
 
-            echo "Done."
+            echo "✅ Done running K6 load test."
           EOF
